@@ -43,7 +43,7 @@ public class UsersController {
 		//DB에서 받은 데이터면 PS를 붙여주자.
 		//그래야 DB에서 받은건지, 사용자에게 받은건지 구분이 된다.
 		if(usersPS !=null){ // 인증됨
-			session.setAttribute("principal", usersPS);
+			session.setAttribute("principal", usersPS); //키값은 무조건 String
 			//인증->인가에서 접근 주체=인정된 유저를 Principal이라고 함
 			return"redirect:/";
 		}else { // 인증안됨
