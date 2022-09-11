@@ -32,10 +32,28 @@ public class BoardsController {
 		//애초에 쿼리스트림이나 키값이 없을 때 null이 나오는지 ""인지 확인해봐야함
 		//System.out.println("page : "+page);
 		if(page==null) page = 0; //if문에서 한줄은 {}안써도 됨
-		Integer startNum = page * 10;
+		Integer startNum = page * 3;
 		
 		List<MainView> boardsList = boardsDao.findAll(startNum);
 		PagingView paging = boardsDao.paging(page);
+		
+		//DB에서 쿼리를 만들어 넣어주기 힘드니까 Java에서 나머지 변수들을 설정
+		
+		final Integer blockCount = 5;
+		
+		Integer currentBlock = page / blockCount;
+		Integer startPageNum = 1 + blockCount * currentBlock;
+		Integer lastPageNum = (startPageNum + blockCount) -1;
+		
+		if(paging.getTotalPage() < lastPageNum) {
+			lastPageNum = paging.getTotalPage();
+		}
+		
+		paging.setBlockCount(blockCount);
+		paging.setCurrentBlock(currentBlock);
+		paging.setStartPageNum(startPageNum);
+		paging.setLastPageNum(lastPageNum);
+		
 		model.addAttribute("boardsList", boardsList);
 		model.addAttribute("paging", paging);
 		return "boards/main";
