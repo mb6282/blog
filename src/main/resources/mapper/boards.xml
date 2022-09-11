@@ -13,7 +13,7 @@
 
 	<select id="findById"
 		resultType="site.metacoding.red.domain.boards.Boards">
-		SELECT title, content
+		SELECT id, title, content, usersId, createdAt
 		FROM boards
 		WHERE id = #{id}
 	</select>
@@ -35,7 +35,7 @@
 	</update>
 
 	<delete id="delete">
-
+		DELETE FROM boards WHERE id = #{id}
 	</delete>
 
 	<select id="paging"
