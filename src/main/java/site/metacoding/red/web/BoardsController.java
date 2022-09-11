@@ -39,20 +39,7 @@ public class BoardsController {
 		
 		//DB에서 쿼리를 만들어 넣어주기 힘드니까 Java에서 나머지 변수들을 설정
 		
-		final Integer blockCount = 5;
-		
-		Integer currentBlock = page / blockCount;
-		Integer startPageNum = 1 + blockCount * currentBlock;
-		Integer lastPageNum = (startPageNum + blockCount) -1;
-		
-		if(paging.getTotalPage() < lastPageNum) {
-			lastPageNum = paging.getTotalPage();
-		}
-		
-		paging.setBlockCount(blockCount);
-		paging.setCurrentBlock(currentBlock);
-		paging.setStartPageNum(startPageNum);
-		paging.setLastPageNum(lastPageNum);
+		paging.makeBlockInfo();
 		
 		model.addAttribute("boardsList", boardsList);
 		model.addAttribute("paging", paging);
@@ -60,7 +47,7 @@ public class BoardsController {
 	}
 	
 	@GetMapping("/boards/{id}")
-	public String getBoard(@PathVariable Integer id, Model model) {
+	public String getBoardDetail(@PathVariable Integer id, Model model) {
 		model.addAttribute("boards", boardsDao.findById(id));
 		return "boards/detail";
 	}
