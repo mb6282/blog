@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import lombok.RequiredArgsConstructor;
 import site.metacoding.red.domain.boards.BoardsDao;
 import site.metacoding.red.domain.boards.mapper.MainView;
+import site.metacoding.red.domain.boards.mapper.PagingView;
 import site.metacoding.red.domain.users.Users;
 import site.metacoding.red.web.dto.request.boards.WriteDto;
 
@@ -23,10 +24,20 @@ public class BoardsController {
 	private final HttpSession session;
 	private final BoardsDao boardsDao;
 
+	//http://localhost:8000/
+	//http://localhost:8000/?page=
+	//쿼리스트림이 없거나 키값이 없어서 Integer가 null이면 초깃값을 0으로 넣어줘야 함
 	@GetMapping({"/","/boards"})
-	public String getBoardList(Model model) {
-		List<MainView> boardsList = boardsDao.findAll();
+	public String getBoardList(Model model, Integer page) { // 0->0, 1->10, 2->20 연산하여 startNum을 만들어줘야 함
+		//애초에 쿼리스트림이나 키값이 없을 때 null이 나오는지 ""인지 확인해봐야함
+		//System.out.println("page : "+page);
+		if(page==null) page = 0; //if문에서 한줄은 {}안써도 됨
+		Integer startNum = page * 10;
+		
+		List<MainView> boardsList = boardsDao.findAll(startNum);
+		PagingView paging = boardsDao.paging(page);
 		model.addAttribute("boardsList", boardsList);
+		model.addAttribute("paging", paging);
 		return "boards/main";
 	}
 	
