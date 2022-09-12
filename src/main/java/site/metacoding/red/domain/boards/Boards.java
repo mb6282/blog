@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import site.metacoding.red.web.dto.request.boards.UpdateDto;
 
 //NoArgsConstructor랑 Setter : findById로 Setter->getter될 값을 받을 디폴트 생성자 생성
 //setter를 받을 디폴트 생성자가 없으면 지금 Boards가 new가 안됨 (아래의 생성자 때문에)
@@ -29,5 +30,10 @@ public class Boards {
 		this.title = title;
 		this.content = content;
 		this.usersId = usersId;
+	}
+	
+	public void 글수정(UpdateDto updateDto) {
+		this.title = updateDto.getTitle();
+		this.content = updateDto.getContent();
 	}
 }

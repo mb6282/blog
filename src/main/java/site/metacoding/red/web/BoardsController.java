@@ -16,6 +16,7 @@ import site.metacoding.red.domain.boards.BoardsDao;
 import site.metacoding.red.domain.boards.mapper.MainView;
 import site.metacoding.red.domain.boards.mapper.PagingView;
 import site.metacoding.red.domain.users.Users;
+import site.metacoding.red.web.dto.request.boards.UpdateDto;
 import site.metacoding.red.web.dto.request.boards.WriteDto;
 
 @RequiredArgsConstructor
@@ -106,8 +107,9 @@ public class BoardsController {
 		
 		// 영속화 : 하나의 코드로 떼어서 사용하기 위해 principal 뒤에 적었음 (boardsPS와 if문 묶음)
 		Boards boardsPS = boardsDao.findById(id);
+		//비정상 요청 체크
 		if (boardsPS == null) { // if는 비정상 로직을 타겟 해서 걸러내는 필터 역할을 하는 게 좋음
-			return "redirect:/boards/" + id;
+			return "errors/badPage";
 		}
 
 		// 인증 체크
@@ -117,10 +119,67 @@ public class BoardsController {
 
 		// 권한 체크 ( 세션 principal.getId() 와 boardsPS의 userId를 비교)
 		if (principal.getId() != boardsPS.getUsersId()) {
-			return "redirect:/boards/" + id;
+			return "errors/badPage";
 		}
 		
 		boardsDao.delete(id);
 		return "redirect:/";
+	}
+	
+	@GetMapping("/boards/{id}/updateForm") //무엇을 업데이트 할 것인지 정해줘야 함 ("boards/updateForm"은 말이 안 됨)
+	//boards테이블의 특정게시글(id)을 update할 수 있는 Form을 주세요
+	public String updateForm(@PathVariable Integer id, Model model) {
+		Boards boardsPS = boardsDao.findById(id);
+		Users principal = (Users) session.getAttribute("principal");
+		
+		//1.id가 있는지 체크
+		//비정상 요청 체크
+		if (boardsPS == null) {
+			return "errors/badPage";
+		}
+		
+		// 인증 체크
+		if (principal == null) {
+			return "redirect:/loginForm";
+		}
+
+		// 권한 체크
+		if (principal.getId() != boardsPS.getUsersId()) {
+			return "errors/badPage";
+		}
+		
+		model.addAttribute("boards", boardsPS);
+		return	"boards/updateForm";
+	}
+	
+	@PostMapping("boards/{id}/update")
+	public String update(@PathVariable Integer id, UpdateDto updateDto) {
+		//영속화
+		Boards boardsPS = boardsDao.findById(id);
+		Users principal = (Users) session.getAttribute("principal");
+		
+		//비정상 요청 체크
+		if (boardsPS == null) {
+			return "errors/badPage";
+		}
+		
+		// 인증 체크
+		if (principal == null) {
+			return "redirect:/loginForm";
+		}
+
+		// 권한 체크
+		if (principal.getId() != boardsPS.getUsersId()) {
+			return "errors/badPage";
+		}
+		
+		//2. 변경(boardsPS만 title, content가 변경됨)
+		boardsPS.글수정(updateDto);
+		
+		//3. 수행 (쿼리문이 boardsPS에서 변경된 title, content를 받음
+		boardsDao.update(boardsPS);
+		
+		//oardsDao.insert(updateDto.toEntity(id));
+		return "redirect:/boards/"+id;
 	}
 }
