@@ -26,26 +26,43 @@ public class BoardsController {
 	private final HttpSession session;
 	private final BoardsDao boardsDao;
 
+	// 1번째 ?page=0&keyword=스프링
+	// 검색을 하면 page 값을 안 넘기므로 디폴트값 0이 들어옴
+
 	// http://localhost:8000/
 	// http://localhost:8000/?page=
 	// 쿼리스트림이 없거나 키값이 없어서 Integer가 null이면 초깃값을 0으로 넣어줘야 함
 	@GetMapping({ "/", "/boards" })
-	public String getBoardList(Model model, Integer page) { // 0->0, 1->10, 2->20 연산하여 startNum을 만들어줘야 함
+	public String getBoardList(Model model, Integer page, String keyword) { // 0->0, 1->10, 2->20 연산하여 startNum을 만들어줘야 함
 		// 애초에 쿼리스트림이나 키값이 없을 때 null이 나오는지 ""인지 확인해봐야함
 		// System.out.println("page : "+page);
-		if (page == null)
-			page = 0; // if문에서 한줄은 {}안써도 됨
+		if (page == null) {
+			page = 0;
+		} // if문에서 한줄은 {}안써도 됨
 		Integer startNum = page * 3;
 
-		List<MainView> boardsList = boardsDao.findAll(startNum);
-		PagingView paging = boardsDao.paging(page);
+		if (keyword == null || keyword.isEmpty()) {
+			List<MainView> boardsList = boardsDao.findAll(startNum);
+			PagingView paging = boardsDao.paging(page, keyword);
+			//키워드는 무조건 받게 되어 있으므로 keyword가 없을 땐 null이라도 받게 해줘야 함
+			// DB에서 쿼리를 만들어 넣어주기 힘드니까 Java에서 나머지 변수들을 설정
 
-		// DB에서 쿼리를 만들어 넣어주기 힘드니까 Java에서 나머지 변수들을 설정
+			paging.makeBlockInfo(keyword);
 
-		paging.makeBlockInfo();
+			model.addAttribute("boardsList", boardsList);
+			model.addAttribute("paging", paging);
 
-		model.addAttribute("boardsList", boardsList);
-		model.addAttribute("paging", paging);
+		} else {
+			List<MainView> boardsList = boardsDao.findSearch(startNum, keyword);
+			PagingView paging = boardsDao.paging(page, keyword);
+
+			// DB에서 쿼리를 만들어 넣어주기 힘드니까 Java에서 나머지 변수들을 설정
+
+			paging.makeBlockInfo(keyword);
+
+			model.addAttribute("boardsList", boardsList);
+			model.addAttribute("paging", paging);
+		}
 		return "boards/main";
 	}
 
@@ -104,10 +121,10 @@ public class BoardsController {
 	public String deleteBoards(@PathVariable Integer id) {
 
 		Users principal = (Users) session.getAttribute("principal");
-		
+
 		// 영속화 : 하나의 코드로 떼어서 사용하기 위해 principal 뒤에 적었음 (boardsPS와 if문 묶음)
 		Boards boardsPS = boardsDao.findById(id);
-		//비정상 요청 체크
+		// 비정상 요청 체크
 		if (boardsPS == null) { // if는 비정상 로직을 타겟 해서 걸러내는 필터 역할을 하는 게 좋음
 			return "errors/badPage";
 		}
@@ -121,23 +138,23 @@ public class BoardsController {
 		if (principal.getId() != boardsPS.getUsersId()) {
 			return "errors/badPage";
 		}
-		
+
 		boardsDao.delete(id);
 		return "redirect:/";
 	}
-	
-	@GetMapping("/boards/{id}/updateForm") //무엇을 업데이트 할 것인지 정해줘야 함 ("boards/updateForm"은 말이 안 됨)
-	//boards테이블의 특정게시글(id)을 update할 수 있는 Form을 주세요
+
+	@GetMapping("/boards/{id}/updateForm") // 무엇을 업데이트 할 것인지 정해줘야 함 ("boards/updateForm"은 말이 안 됨)
+	// boards테이블의 특정게시글(id)을 update할 수 있는 Form을 주세요
 	public String updateForm(@PathVariable Integer id, Model model) {
 		Boards boardsPS = boardsDao.findById(id);
 		Users principal = (Users) session.getAttribute("principal");
-		
-		//1.id가 있는지 체크
-		//비정상 요청 체크
+
+		// 1.id가 있는지 체크
+		// 비정상 요청 체크
 		if (boardsPS == null) {
 			return "errors/badPage";
 		}
-		
+
 		// 인증 체크
 		if (principal == null) {
 			return "redirect:/loginForm";
@@ -147,22 +164,22 @@ public class BoardsController {
 		if (principal.getId() != boardsPS.getUsersId()) {
 			return "errors/badPage";
 		}
-		
+
 		model.addAttribute("boards", boardsPS);
-		return	"boards/updateForm";
+		return "boards/updateForm";
 	}
-	
+
 	@PostMapping("boards/{id}/update")
 	public String update(@PathVariable Integer id, UpdateDto updateDto) {
-		//영속화
+		// 영속화
 		Boards boardsPS = boardsDao.findById(id);
 		Users principal = (Users) session.getAttribute("principal");
-		
-		//비정상 요청 체크
+
+		// 비정상 요청 체크
 		if (boardsPS == null) {
 			return "errors/badPage";
 		}
-		
+
 		// 인증 체크
 		if (principal == null) {
 			return "redirect:/loginForm";
@@ -172,14 +189,14 @@ public class BoardsController {
 		if (principal.getId() != boardsPS.getUsersId()) {
 			return "errors/badPage";
 		}
-		
-		//2. 변경(boardsPS만 title, content가 변경됨)
+
+		// 2. 변경(boardsPS만 title, content가 변경됨)
 		boardsPS.글수정(updateDto);
-		
-		//3. 수행 (쿼리문이 boardsPS에서 변경된 title, content를 받음
+
+		// 3. 수행 (쿼리문이 boardsPS에서 변경된 title, content를 받음
 		boardsDao.update(boardsPS);
-		
-		//oardsDao.insert(updateDto.toEntity(id));
-		return "redirect:/boards/"+id;
+
+		// oardsDao.insert(updateDto.toEntity(id));
+		return "redirect:/boards/" + id;
 	}
 }
