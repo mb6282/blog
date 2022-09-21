@@ -22,11 +22,12 @@
 	</select>
 	
 	<update id="update">
-	
+		UPDATE users SET password = #{password}, email = #{email} 
+		WHERE id = #{id}
 	</update>
 	
-	<delete id="delete">
-	
+	<delete id="deleteById">
+		DELETE FROM users WHERE id = #{id}
 	</delete>
 
 </mapper>

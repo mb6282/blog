@@ -11,5 +11,5 @@ public interface UsersDao {
 	public Users findById(Integer id);
 	public List<Users> findAll();
 	public void update(Users users); // DTO 생각해보기
-	public void delete(Integer id);
+	public void deleteById(Integer id);
 }

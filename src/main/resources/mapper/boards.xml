@@ -20,11 +20,14 @@
 
 	<select id="findAll"
 		resultType="site.metacoding.red.domain.boards.mapper.MainView">
-		SELECT b.id, b.title, u.username
+		SELECT
+		b.id, b.title, u.username
 		FROM boards b
-		INNER JOIN
+		LEFT OUTER JOIN
 		users u
-		ON b.usersId = u.id
+		ON
+		b.usersId = u.id
+		<if test="keyword != null">WHERE title like '%'||#{keyword}||'%'</if>
 		ORDER BY b.id DESC
 		OFFSET #{startNum} ROWS
 		FETCH NEXT 3 ROWS ONLY
@@ -38,7 +41,8 @@
 		users u
 		ON b.usersId = u.id
 		WHERE title like '%'||#{keyword}||'%'
-		ORDER BY b.id DESC
+		ORDER
+		BY b.id DESC
 		OFFSET #{startNum} ROWS
 		FETCH NEXT 3 ROWS ONLY
 	</select>
@@ -57,19 +61,27 @@
 		SELECT totalCount,
 		totalPage,
 		currentPage,
-		decode(currentPage, 0, 1, 0) first,
+		decode(currentPage, 0, 1, 0)
+		first,
 		decode(currentPage, totalPage-1, 1,
 		0) last
 		FROM
 		(
-		select count(*) totalCount, ceil(count(*)/3) totalPage,
+		select count(*)
+		totalCount, ceil(count(*)/3) totalPage,
 		#{page} currentPage, 0
-		first, 0 last
+		first, 0
+		last
 		FROM boards
 		<if test="keyword != null">
 			WHERE title like '%'||#{keyword}||'%'
 		</if>
 		)
 	</select>
+
+	<update id="updateByUsersId">
+		UPDATE boards SET usersId = null WHERE usersId =
+		#{usersId}
+	</update>
 
 </mapper>

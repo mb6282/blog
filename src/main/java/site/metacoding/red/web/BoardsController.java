@@ -40,15 +40,14 @@ public class BoardsController {
 			page = 0;
 		} // if문에서 한줄은 {}안써도 됨
 		Integer startNum = page * 3;
-
 		if (keyword == null || keyword.isEmpty()) {
-			List<MainView> boardsList = boardsDao.findAll(startNum);
+			List<MainView> boardsList = boardsDao.findAll(startNum, "");
 			PagingView paging = boardsDao.paging(page, keyword);
 			//키워드는 무조건 받게 되어 있으므로 keyword가 없을 땐 null이라도 받게 해줘야 함
 			// DB에서 쿼리를 만들어 넣어주기 힘드니까 Java에서 나머지 변수들을 설정
 
 			paging.makeBlockInfo(keyword);
-
+			
 			model.addAttribute("boardsList", boardsList);
 			model.addAttribute("paging", paging);
 
